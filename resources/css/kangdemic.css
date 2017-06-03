@@ -1,0 +1,50 @@
+body{
+	font-family: 'Montserrat', sans-serif;
+	margin: 0;
+	background:black;
+	}
+
+.grid-container{
+    background: red;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 30px 1fr 40px 100px;
+}
+
+
+#main{
+    /*picture needs to be in a nested div*/
+    overflow: hidden;
+    min-height:500px;
+    min-width:1000px;
+    /*max-width:1300px;*/
+    max-height:1600px;
+    max-width: 4000px;
+    background: green;
+
+    grid-row:2/3;
+  
+    
+}
+#map{
+    background-image: url("map.jpg");
+      zoom: 1;
+}
+.status{
+    background: slateblue;
+    grid-row: 1/2;
+}
+.options{
+    display:flex;
+    justify-content: center;
+    background: pink;
+    grid-row: 3/4;
+  
+}
+.cards{
+    background: aqua;
+    grid-row: 4/5;
+}
+
+
+

@@ -1,27 +1,35 @@
-<!DOCTYPE html>
+<!doctype HTML>
 <html>
 <head>
-	<title>Kangdemic</title>
-	<link href="css/bootstrap.css" rel="stylesheet" />
-	<!--<link href="css/bootstrap-theme.css" rel="stylesheet" />-->
-	<link type="text/css" href="css/portfolio.css" rel="stylesheet" />
-	<script src="lib/jquery.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<script src="js/game.js"></script>
-	<link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <script src="resources/vendors/dragscroll.js"></script>
+    <title>Kangdemic</title>
+	<link type="text/css" href="resources/css/kangdemic.css" rel="stylesheet" />
+    <script src="resources/js/game.js"></script>
+
 </head>
-<body>
-<section id="top">
-<div class="parallax">
-	<div class="content">
-		<h1>Lukie Kang</h1>
-		<h3>Testing a pandemic clone</h3>
-		<br>
-		<a href="https://twitter.com/lukie_k"><i class="fa fa-twitter fa-3x" aria-hidden="true">    &nbsp;</i></a>
-		<a href="https://www.facebook.com/lukiekang"><i class="fa fa-facebook-official fa-3x" aria-hidden="true">    &nbsp;</i></a>
-  		<a href="http://github.com/neosaurrrus"><i class="fa fa-github fa-3x" aria-hidden="true">    &nbsp;</i></a>
-		<a href="mailto:bdd_lukiek@gmail.com"><i class="fa fa-envelope fa-3x" aria-hidden="true">    &nbsp;</i></a>
-	</div>
-</div>
-</section>
+<body onload=" draw();">
+    <div class="grid-container">
+        <div class="status">
+            <span>This is where all the status stuff will go. Cure status, cards left, cubes left infection rate, outbreak count</span>
+        </div>
+        <div id="main" class="free dragscroll">
+          <canvas id="map" width="4000" height= "2000">
+          </canvas>       
+        </div>
+        <div class="options">
+            <span id="playerDisplay">PlayerName</span>
+            <button id="move">Move</button>
+            <button id="treat">Treat</button>
+            <button id="build">Build</button>
+            <button id="trade">Trade</button>
+            <button id="cure">Cure</button>
+            <button id="pass">Pass</button>
+            <span id="actionDisplay">Actions</span>
+        </div>
+        <div class="cards"><h1>Hand Stuff, the current players hand should be displayed here</h1>
+        </div>
+    </div>
+</body>
+</script>
 </html>
