@@ -5,13 +5,13 @@
     <script src="resources/vendors/dragscroll.js"></script>
     <title>Kangdemic</title>
 	<link type="text/css" href="resources/css/kangdemic.css" rel="stylesheet" />
-    <script src="resources/js/game.js"></script>
+    
 
 </head>
-<body onload=" draw();">
+<body>
     <div class="grid-container">
         <div class="status">
-            <span>This is where all the status stuff will go. Cure status, cards left, cubes left infection rate, outbreak count</span>
+            <span id="cureStatus"></span><span id="cubesLeft"></span><span id=infectionRate></span><span id=cardsLeft></span><span id=outbreaks></span>
         </div>
         <div id="main" class="free dragscroll">
           <canvas id="map" width="4000" height= "2000">
@@ -27,9 +27,14 @@
             <button id="pass">Pass</button>
             <span id="actionDisplay">Actions</span>
         </div>
-        <div class="cards"><h1>Hand Stuff, the current players hand should be displayed here</h1>
+        <div id="cards">
+            <div class="card red">meow</div> 
+            <div class="card yellow">meow2</div> 
+            <div class="card blue">meow3</div> 
+        </div>
         </div>
     </div>
 </body>
-</script>
+<script src="resources/js/game.js"></script>
+
 </html>

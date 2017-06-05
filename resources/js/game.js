@@ -12,16 +12,21 @@ var board = {
 	sDeck:[],   //deck for event cards
 	eDeck:[], //deck of event cards
 	outbreaks:0,	//outbreak counter
+	currentInfectionLevel: 0,
 	iRate:[2,2,2,3,3,4,4],	//infection rate
 	cures: {     			//Cure Tracker
-			redCure:false,
-			blueCure:false,
-			yellowCure:false,
-			blackCure: false
-			},
+			redCureStatus:"Active",
+			blueCureStatus:"Active",
+			yellowCureStatus:"Active",
+			blackCureStatus: "Active"
+		},
+	bluePool: 24,
+	redPool: 24,
+	yellowPool: 24,
+	blackPool: 24,
 	events:["Airlift", "Commercial Travel Ban", "Government Interferance", "Remote Treatment", "New Assignment"]
 	};
-
+	
 
 
 function findCity(city){
@@ -41,9 +46,7 @@ function findCity(city){
 		for (var i = 0; i<board.cities.length; i++){
 			for (var j=0; j<board.cities[i].linkedCities.length; j++){	
 				board.tableCity = board.cities[i].linkedCities[j];
-				console.log(board.tableCity);
 				var target =  board.cities.findIndex(findCity);
-				console.log(target);
 				ctx.beginPath();
 				ctx.moveTo(board.cities[i].cityX+7, board.cities[i].cityY+7);
 				var ferryText = ("Ferry to " + board.cities[target].name);
@@ -125,30 +128,23 @@ function findCity(city){
 			console.log(l);
 			ctx.fillRect(board.cities[l].cityX - 20 + (i*10), board.cities[l].cityY - 22, 20, 20);
 		};
-
-
-
 	}; //canvas context
- }; //draw end
+
+//status bar
+document.getElementById("cureStatus").innerHTML = "Cure Progress: " + "<span class=red>" + board.cures.redCureStatus + "</span>" + "<span class=blue>" + "    " + board.cures.blueCureStatus + "</span>"+ "<span class=yellow>" + " " + board.cures.yellowCureStatus + "</span>"+ "<span class=black>"+ "    " + board.cures.blackCureStatus+ "</span>"; 
+document.getElementById("cubesLeft").innerHTML = "Disease Cubes Left: " + "<span class=red>" + board.redPool + "</span> " + "<span class=blue>" + board.bluePool + "</span>" + "<span class=yellow>" + " " + board.yellowPool + "</span>" + "<span class=black>" + " " + board.blackPool + "</span>"
+document.getElementById("cardsLeft").innerHTML = "Player Cards Left: " + board.pDeck.length;
+document.getElementById("infectionRate").innerHTML = "Infection Rate: "+ board.iRate[board.currentInfectionLevel];
+document.getElementById("outbreaks").innerHTML = "Outbreaks: " + board.outbreaks;
+
+//hand bar
 
 
-
-//Need to do the top bar stuff.
-
-
-//Need to do cards section
+//actions
 
 
-//buttons bar.
-
-
-
-
-
-
-
-
-
+console.log("end of drawing");
+}; //draw end
 
 
 //City Model
@@ -332,8 +328,6 @@ function findPlayerCity(city){
 	return city.name === board.tableCard.name;
 };
 
-
-
 var initialInfection = function(){  //initial Infection Stage
 	for (var i=3; i > 0; i--){   //for each level of cubes....
 		for (var j=0; j < 3;j++){  //pick 3 cities off the top of the iDeck
@@ -341,12 +335,16 @@ var initialInfection = function(){  //initial Infection Stage
 		var target = board.cities[(board.cities.findIndex(findCardCity))];
 			if (target.color === "Red") {
 				target.red = i;
+				board.redPool = board.redPool - i;
 			} else if (target.color === "Blue") {
 				target.blue = i;
+				board.bluePool = board.bluePool - i;
 			} else if (target.color === "Black"){
 				target.black = i;
+				board.blackPool = board.blackPool - i;
 			} else if (target.color === "Yellow"){
 				target.yellow= i;
+				board.yellowPool = board.yellowPool - i;
 			};
 		console.log(board.tableCard.name + " gets " + i + " " + board.tableCard.color + " cube(s).");
 		board.iPile.push(board.tableCard); //place into infection Pile.
@@ -354,12 +352,15 @@ var initialInfection = function(){  //initial Infection Stage
 	};
 };
 
+
+
 var playLoop = function(players){
 	for (var turn=0; i<players; i++){
 		console.log("Player " + i + "'s turn");
 
 	};
 };
+
 
 //Game SETUP
 	cityBuild(); //build cities
@@ -372,6 +373,7 @@ var playLoop = function(players){
 	dealPCards(board.players.length); //deal 2 pdeck cards to each player
 	epiInsert(board.difficulty[0].epiCards); //split the pDeck in the number of epidemic cards. Insert EPICard. Shuffle. Rejoin.
 	initialInfection(); //infect initial cities
+	draw();
 	console.log("Game Board setup is complete");
 
 //END SETUP
@@ -395,4 +397,29 @@ playLoop(board.players.length);
 //EndSpecial
 
 console.log(board);    
-                    
+var diseaseTotal = board.redPool + board.blackPool + board.bluePool + board.yellowPool;
+console.log(diseaseTotal);              
+
+
+
+//Need to do cards section
+//buttons bar.
+
+
+createHands(board.players.length);
+function createHands(players){
+	console.log("this is last?")
+	var handCode = "";
+	var playerHand = document.createElement("div");
+	var t = document.createTextNode("hello");
+	playerHand.appendChild(t);
+	document.getElementById("cards").appendChild(playerHand);
+
+	if (players===4){
+		handCode = "meow we have 4 players";
+		
+	} else {
+		handCode = "we dont have 4 players";
+	}
+	return handCode;
+};
