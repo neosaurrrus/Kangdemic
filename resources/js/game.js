@@ -2,6 +2,7 @@ var board = {
 	planet:"Earth 2017", //i dont actually know what this is:
 	tableCity:"", //the currentCity in Play
 	tableCard:{}, //the Current card in Play
+	controls:{}, //global variables to keep track of that dont fall into another category
 	players:[], //Name of player/class/hand
 	cities:[],    //all the cities
 	difficulty:[], //probably object that contains name/epi cards.
@@ -27,6 +28,7 @@ var board = {
 	events:["Airlift", "Commercial Travel Ban", "Government Interferance", "Remote Treatment", "New Assignment"]
 	};
 	
+board.controls.actionSpent = false; //has the current action finished?
 
 
 function findCity(city){
@@ -54,19 +56,19 @@ function findCity(city){
 				if (board.cities[i].name === "Sydney" && board.cities[target].name === "Los Angeles") {
 					ctx.lineTo(4000, 1100);
 					ctx.fillText(ferryText,3760,1331);
-				}else if (board.cities[i].name === "Los Angeles" && board.cities[target].name === "Sydney") {
+				}else if (board.cities[i].name === "Los Angeles" && board.cities[target].name === "Sydney"){
 					ctx.lineTo(0, 1040);
 					ctx.fillText(ferryText,400,830);
-				}else if (board.cities[i].name === "San Francisco" && board.cities[target].name === "Tokyo") {
+				}else if (board.cities[i].name === "San Francisco" && board.cities[target].name === "Tokyo"){
 					ctx.lineTo(0, 529);
 					ctx.fillText(ferryText,200,529);
 				}else if (board.cities[i].name === "Tokyo" && board.cities[target].name === "San Francisco") {
-					ctx.lineTo(4000, 529);
+					ctx.lineTo(4000, 529)
 					ctx.fillText(ferryText,3720,550);
-				}else if (board.cities[i].name === "Manila" && board.cities[target].name === "San Francisco") {
+				}else if (board.cities[i].name === "Manila" && board.cities[target].name === "San Francisco"){
 					ctx.lineTo(4000, 800);
 					ctx.fillText(ferryText,3700,950);
-				}else if (board.cities[i].name === "San Francisco" && board.cities[target].name === "Manila") {
+				}else if (board.cities[i].name === "San Francisco" && board.cities[target].name === "Manila"){
 					ctx.lineTo(0, 800);
 					ctx.fillText(ferryText,270,710);
 				}else{
@@ -137,7 +139,6 @@ document.getElementById("cardsLeft").innerHTML = "Player Cards Left: " + board.p
 document.getElementById("infectionRate").innerHTML = "Infection Rate: "+ board.iRate[board.currentInfectionLevel];
 document.getElementById("outbreaks").innerHTML = "Outbreaks: " + board.outbreaks;
 
-//hand bar
 
 
 //actions
@@ -172,6 +173,7 @@ function CCard(name, color){
 };
 function ECard(name){
 	this.name = name
+	this.color = "Green"
 };
 function EpiCard(name){
 	this.name = "Epidemic!"
@@ -180,7 +182,7 @@ function Player(name, role,hand, location){
 	this.name = name,
 	this.role = role,
 	this.hand = [];
-	this.location = "Atlanta"
+	this.location = "Atlanta" 
 };
 function Difficulty(name, epiCards){
 	this.name = name
@@ -269,6 +271,7 @@ var shuffle=function(deck){
 console.log("Shuffled a deck");
 };
 
+//BUILD PLAYERS
 var playerBuild = function(){
 	board.difficulty.push(new Difficulty("Standard", 4)); //fixed difficulty for now
 	var players=4; //choose number of players, 4 for now.
@@ -286,9 +289,17 @@ var dealPCards = function(){    //Deal initial cards to all players
 				for (var j=0; j<2;j++){
 					var card = board.pDeck.pop();
 					board.players[i].hand.push(card);
+							//set card colour AND apply that colour to the relavent thingy. 
+					 var playerHandID= "p" + i + j;
+			document.getElementById(playerHandID).innerHTML = board.players[i].hand[j].name;
+			document.getElementById(playerHandID).className = "Card " + board.players[i].hand[j].color;
 				};
 			console.log (board.players[i].name);
-			console.log (board.players[i].hand);			
+			console.log (board.players[i].hand);
+			
+		
+	       
+	
 	};
 console.log("Players dealt two player cards")
 };
@@ -352,13 +363,32 @@ var initialInfection = function(){  //initial Infection Stage
 	};
 };
 
+//setup controls
 
 
+
+var passAction = function(actionSpent){
+	return actionSpent = true;
+};
+
+//Main Turn Loop
 var playLoop = function(players){
-	for (var turn=0; i<players; i++){
-		console.log("Player " + i + "'s turn");
+	for (var turn=0; turn<players; turn++){
+		console.log("Player " + turn + "'s turn");
+		document.getElementById("playerDisplay").innerHTML = "Player: " + board.players[i].name + " Role: " + board.players[i].role
+		
+		for(actions=4; actions>0; actions--){
+			board.controls.actionSpent=false;
+			while (board.controls.actionSpent=false){
+			console.log("Ending Action:" + (4-actions))
+				};		
+			};
 
-	};
+
+		alert("end of turn")
+};
+	
+	playLoop(board.players.length);
 };
 
 
@@ -406,20 +436,35 @@ console.log(diseaseTotal);
 //buttons bar.
 
 
-createHands(board.players.length);
-function createHands(players){
-	console.log("this is last?")
-	var handCode = "";
-	var playerHand = document.createElement("div");
-	var t = document.createTextNode("hello");
-	playerHand.appendChild(t);
-	document.getElementById("cards").appendChild(playerHand);
 
-	if (players===4){
-		handCode = "meow we have 4 players";
+
+
+
+
+
+
+
+
+
+
+
+
+
+//promatically create hands depending on number of players.
+// createHands(board.players.length);
+// function createHands(players){
+// 	console.log("this is last?")
+// 	var handCode = "";
+// 	var playerHand = document.createElement("div");
+// 	var t = document.createTextNode("hello");
+// 	playerHand.appendChild(t);
+// 	document.getElementById("status").appendChild(playerHand);
+
+// 	if (players===4){
+// 		handCode = "meow we have 4 players";
 		
-	} else {
-		handCode = "we dont have 4 players";
-	}
-	return handCode;
-};
+// 	} else {
+// 		handCode = "we dont have 4 players";
+// 	}
+// 	return handCode;
+// };

@@ -8,7 +8,7 @@ body{
     background: red;
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 30px 1fr 40px 200px;
+    grid-template-rows: 30px 1fr 60px 200px;
     min-height: 700px;
 }
 
@@ -26,8 +26,7 @@ body{
     
 }
 #map{
-    background-image: url("map.jpg");
-    
+    background-image: url("map.jpg"); 
     zoom: 1;
 }
 .status{
@@ -38,19 +37,49 @@ body{
     color: white;
     grid-row: 1/2;
 }
-.options{
+#options{
     display:flex;
-    justify-content: center;
-    background: pink;
-    grid-row: 3/4;
-  
-}
-#cards{
+    color: white;
     justify-content: space-around;
-    background: aqua;
-    grid-row: 4/5;
-    overflow: hidden;
+    align-items: center;
+    background: rgb(150,150,150);
+    grid-row: 3/4;
 }
+
+#buttonsContainer{
+    display:flex;
+    align-content: space-between;
+}
+
+
+#cards{
+    display:flex;
+    justify-content: space-around;
+    background: rgb(100,100,100);
+    color:white;
+    grid-row: 4/5;
+}
+
+.handTitle{
+    text-align:center;
+    border: 2px solid white;
+    padding: 5px 30px;
+    border-radius: 5px;
+}  
+
+.handTitle .card{
+    
+    text-align: center;
+    height: 20px;
+    width: 200px;
+    color: hotpink;
+    
+}
+
+
+
+
+
 .blue{
     color: rgb(0,0,200);
 }
@@ -62,10 +91,21 @@ body{
 }.black{
     color: rgb(0,0,0);
 }
+.green {
+    color:rgb(0,200,0);
+}
 
-.card{
-    display: flex;
-    justify-content: space-between;
-    width: 50px;
-    height: 70px;
+.Blue{
+    color: rgb(0,0,200);
+}
+.Red{
+    color: rgb(200,0,0);
+}
+.Yellow{
+    color: rgb(200,200,0);
+}.Black{
+    color: rgb(0,0,0);
+}
+.Green {
+    color:rgb(0,200,0);
 }
