@@ -1,25 +1,50 @@
 body{
 	font-family: 'Montserrat', sans-serif;
-	padding: 20px;
+	padding: 5px;
 	background:black;
+    /*lets make it 1300 by 700 min*/
+    min-width: 1400px;
+    min-height: 1000px;
+    /*max-height: vmax;*/
+
 	}
 
 .grid-container{
-    background: red;
+    overflow:scroll;
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 30px 1fr 60px 200px;
-    min-height: 700px;
+
+    
+}
+
+.control {
+  border: 2px solid red;
+
+  border-radius: 13px;
+  color: #ffffff;
+  background: transparent;
+  padding: 5px;
+  text-decoration: none;
+  font-family: 'Montserrat', sans-serif;
+  
+}
+.control:hover {
+	background-color:transparent;
+    background: #3cb0fd;
+    text-decoration: none;
+}
+.control:active {
+
 }
 
 
 #main{
     /*picture needs to be in a nested div*/
     overflow: hidden;
-    
+    max-height:70vh;
     min-width:1000px;
-    max-height:1600px;
-    max-width: 4000px;
+    max-width: 4000px;*/
     background: green;
     grid-row:2/3;
     min-height: 300px;
@@ -30,6 +55,7 @@ body{
     zoom: 1;
 }
 .status{
+    
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -38,6 +64,7 @@ body{
     grid-row: 1/2;
 }
 #options{
+    padding: 5px;
     display:flex;
     color: white;
     justify-content: space-around;
@@ -48,37 +75,38 @@ body{
 
 #buttonsContainer{
     display:flex;
-    align-content: space-between;
+    text-align: center;
+    justify-content: space-between;
+    min-width: 700px;
+    
 }
-
-
 #cards{
     display:flex;
     justify-content: space-around;
     background: rgb(100,100,100);
     color:white;
     grid-row: 4/5;
+    padding: 5px;
 }
 
 .handTitle{
     text-align:center;
     border: 2px solid white;
-    padding: 5px 30px;
+    padding: 5px 20px;
     border-radius: 5px;
 }  
 
 .handTitle .card{
-    
     text-align: center;
     height: 20px;
     width: 200px;
     color: hotpink;
     
 }
-
-
-
-
+.handTitle .card:hover{
+    background: slateblue; 
+    
+}
 
 .blue{
     color: rgb(0,0,200);

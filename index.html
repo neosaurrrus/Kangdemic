@@ -3,10 +3,8 @@
 <head>
     <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
     <script src="resources/vendors/dragscroll.js"></script>
-    <title>Kangdemic</title>
+    <title>Kangdemic - A Pandemic Clone created in HTML/CSS and JS</title>
 	<link type="text/css" href="resources/css/kangdemic.css" rel="stylesheet" />
-    
-
 </head>
 <body>
     <div id="grid-container">
@@ -20,12 +18,13 @@
         <div id="options">
             <div id="playerDisplay">PlayerName</div>
             <div id ="buttonsContainer">
-                <button id="move">Move</button>
-                <button id="treat">Treat</button>
-                <button id="build">Build</button>
-                <button id="trade">Trade</button>
-                <button id="cure">Cure</button>
-                <button id="pass">Pass</button>
+                <button class="control" id="move">Move</button>
+                <button class="control" id="treat">Treat</button>
+                <button class="control" id="build">Build</button>
+                <button class="control" id="trade">Trade</button>
+                <button class="control" id="cure">Cure</button>
+                <button class="control" id="event">Event Card</button>
+                <button class="control" id="pass">Pass</button>
             </div>
             <div id="actionDisplay">Actions</div>
         </div>
@@ -74,8 +73,7 @@
             <div class="card" id="p37"></div> 
             <div class="card" id="p38"></div> 
         </div>
-    </div>
+    </div> <!-- grid container end-->
 </body>
 <script src="resources/js/game.js"></script>
-
 </html>

@@ -28,7 +28,9 @@ var board = {
 	events:["Airlift", "Commercial Travel Ban", "Government Interferance", "Remote Treatment", "New Assignment"]
 	};
 	
-board.controls.actionSpent = false; //has the current action finished?
+board.controls.actions = 4; //how many actions per turn
+board.controls.sequence = 0; //tracks who's turn it is.
+
 
 
 function findCity(city){
@@ -44,7 +46,7 @@ function findCity(city){
 		ctx.lineWidth="2";
 		ctx.strokeStyle="white";
 		ctx.fillStyle = "white";
-		ctx.font = '1.3em  Montserrat';
+		ctx.font = '1em  Montserrat';
 		for (var i = 0; i<board.cities.length; i++){
 			for (var j=0; j<board.cities[i].linkedCities.length; j++){	
 				board.tableCity = board.cities[i].linkedCities[j];
@@ -78,7 +80,6 @@ function findCity(city){
 				ctx.stroke();
 			};
 		}; //end of cities loop
-
 
 		//Place cities OVER the lines, choosing right color for each one
 		for (var i = 0; i<board.cities.length; i++){
@@ -138,18 +139,17 @@ document.getElementById("cubesLeft").innerHTML = "Disease Cubes Left: " + "<span
 document.getElementById("cardsLeft").innerHTML = "Player Cards Left: " + board.pDeck.length;
 document.getElementById("infectionRate").innerHTML = "Infection Rate: "+ board.iRate[board.currentInfectionLevel];
 document.getElementById("outbreaks").innerHTML = "Outbreaks: " + board.outbreaks;
-
-
-
 //actions
-
-
 console.log("end of drawing");
 }; //draw end
 
 
-//City Model
-function City(name, color, population, linkedCities, cityX, cityY, researchStation) {
+var reDraw= function(){  //Redraws the canvas
+	//something to clear canvas
+	draw();
+}
+
+function City(name, color, population, linkedCities, cityX, cityY, researchStation) { //builds the City models.
 	this.name = name,
 	this.color = color,
 	this.cityX = cityX,
@@ -190,7 +190,7 @@ function Difficulty(name, epiCards){
 }
 
 //build cities
-var cityBuild = function worldBuilder(){
+var cityBuild = function worldBuilder(){ //Build cities based on properties. Can this be off of a json/xml file?
 	board.cities.push(new City("London", "Blue", "8000000", ["New York", "Paris", "Madrid", "Essen"],1950,400));
 	board.cities.push(new City("Washington", "Blue", "9000000", ["Montreal", "New York", "Miami", "Atlanta"], 1150,600));
 	board.cities.push(new City("New York", "Blue", "9000000", ["Montreal", "Washington", "London"],1250,500));
@@ -240,10 +240,6 @@ var cityBuild = function worldBuilder(){
 	board.cities.push(new City("Osaka", "Red", "12000000", ["Tokyo", "Taipei"],3560,630));
 	board.cities.push(new City("Beijing", "Red", "12000000", ["Shanghai", "Seoul"],3180,550));
 
-	
-
-console.log("Built "+board.cities.length+" cities");
-};
 var deckBuild = function(iCardNumber){ //build deck
 	for (var i = 0; i < board.cities.length; i++){
 		var newCardName = board.cities[i].name;
@@ -295,16 +291,13 @@ var dealPCards = function(){    //Deal initial cards to all players
 			document.getElementById(playerHandID).className = "Card " + board.players[i].hand[j].color;
 				};
 			console.log (board.players[i].name);
-			console.log (board.players[i].hand);
-			
-		
-	       
-	
+			console.log (board.players[i].hand);	
 	};
 console.log("Players dealt two player cards")
 };
 
 var epiInsert = function(cards){ //split pDeck into <dif> piles/ add EpiCard/shuffle/rejoin
+
 var splitDeck = [];
 	for (var i = 0; i < cards; i++){
 		splitDeck.push([])
@@ -329,6 +322,13 @@ var splitDeck = [];
 	console.log("Split the player deck into " + cards + " piles, added epidemic Cards. Put them back together" )
 	};
 
+var clickMap = function(mapx, mapY){
+	clickedCity = "San Francisco";
+	// for i=0 to  board.cities.length
+		//if (mapX >= board.cities[i].cityX && mapX >=board.cities[i].cityX + <length>)
+			//var clickedCity = board.cities[i].name
+	return clickedCity;
+};
 function findCardCity(city){
 	var cityName = board.tableCard.name
 	return city.name === board.tableCard.name;
@@ -363,33 +363,117 @@ var initialInfection = function(){  //initial Infection Stage
 	};
 };
 
-//setup controls
-
-
-
-var passAction = function(actionSpent){
-	return actionSpent = true;
+//setup controls including buttons and display
+var setupControls = function(){
+	document.getElementById("pass").addEventListener("click", passAction);
+	document.getElementById("event").addEventListener("click", eventAction);
+	document.getElementById("cure").addEventListener("click", cureAction);
+	document.getElementById("trade").addEventListener("click", tradeAction);
+	document.getElementById("build").addEventListener("click", buildAction);
+	document.getElementById("treat").addEventListener("click", treatAction);
+	document.getElementById("move").addEventListener("click", moveAction);
+	playerUpdate();
 };
 
-//Main Turn Loop
-var playLoop = function(players){
-	for (var turn=0; turn<players; turn++){
-		console.log("Player " + turn + "'s turn");
-		document.getElementById("playerDisplay").innerHTML = "Player: " + board.players[i].name + " Role: " + board.players[i].role
-		
-		for(actions=4; actions>0; actions--){
-			board.controls.actionSpent=false;
-			while (board.controls.actionSpent=false){
-			console.log("Ending Action:" + (4-actions))
-				};		
-			};
+var playerUpdate = function(){
+	document.getElementById("playerDisplay").innerHTML = "Player: " + board.players[board.controls.sequence].name + " - Role: " + board.players[board.controls.sequence].role
+	document.getElementById("actionDisplay").innerHTML = "Actions Remaining: "  + board.controls.actions;
+};
+var actionUpdate = function(){
+	board.controls.actions--;
+	document.getElementById("actionDisplay").innerHTML = "Actions Remaining: "  + board.controls.actions;
+	if (board.controls.actions===0){
+	endTurn();
+	};
+};
+
+//Events that occur upon hitting control buttons
+var passAction = function(){            //DONE!
+	console.log("you hit the PASS button yay");
+	actionUpdate();
+	};
 
 
-		alert("end of turn")
+var eventAction = function(){   //make them all an easy one for now..
+	console.log("you hit the EVENT button yay");
+	//check if any event cards are held by all players
+	//if no, do nothing/end
+	//if yes, show options/cancel
+	//perform event function
+	//DONT lose an action
 };
-	
-	playLoop(board.players.length);
+
+var cureAction = function(){
+	console.log("you hit the CURE button yay");
+	//count the number of cards of same colourin player's hand
+	//if 5 then update curestatus, 
+	//need to change treatPower
+	//draw, actionupdate
 };
+var tradeAction = function(){
+	console.log("you hit the Trade button yay");
+	//check if any players are nearby Else no
+	//check if and cards in those are tradable else no
+	//select give or take
+	//show cards to be given/taken
+	//select cards
+	//move to relevant player hand;
+	//update hand area
+}; 
+var buildAction = function(){
+	console.log("you hit the BUILD button yay");
+	//see if location matches cards in hand 
+	//if not, do nothing
+	//if yes build a research station, update screen and city,
+	// draw/actionupdate etc
+};
+
+var treatAction = function(){
+	console.log("you hit the TREAT button yay");
+	//see if there is any diseases to treat, stop if not
+	//if multiple then prompt which one/cancel
+	//if not multiple then reduce disease in place by one
+	//draw();
+	//actionUpdate
+};
+
+var moveAction = function(){
+	console.log("you hit the MOVE button yay");
+	//define variables
+	var currentLocation=[];
+	var canGoTo = [];
+	//find out where the player is
+	var currentLocation = board.players[board.controls.sequence].location;
+	//find out where he can go by car/ferry;
+	var canGoTo= board.cities[board.cities.findIndex(findCity)].linkedCities;
+	//find out where cards can move 
+	document.getElementById("buttonsContainer").innerHTML = "You can go to: " + canGoTo
+	document.getElementById("map").addEventListener("mouseup", moveActionConclusion);
+};
+
+var moveActionConclusion = function (){
+	board.controls.newLocation= "Chicago";
+	var rect = document.getElementById("map").getBoundingClientRect()
+	mapX=event.clientX - rect.left;
+	mapY=event.clientY - rect.top;
+	clickMap(mapX, mapY, function(){prompt("you clicked on the map X=" + mapX + "Y=" + mapY, answer)});
+	board.players[board.controls.sequence].location = answer
+	//figure out where the click means!	
+	//display options / cancel
+	//update location to new place
+	//update canvas;
+	draw();
+};
+
+var endTurn = function(){
+	board.controls.sequence++
+	board.controls.actions = 4;   //needs to be variable for Generalist
+	if (board.controls.sequence === board.players.length){
+		board.controls.sequence = 0;
+		};
+    playerUpdate();
+};
+
 
 
 //Game SETUP
@@ -403,68 +487,51 @@ var playLoop = function(players){
 	dealPCards(board.players.length); //deal 2 pdeck cards to each player
 	epiInsert(board.difficulty[0].epiCards); //split the pDeck in the number of epidemic cards. Insert EPICard. Shuffle. Rejoin.
 	initialInfection(); //infect initial cities
-	draw();
+	draw(); //populate the board
+	setupControls(); //make the buttons work
 	console.log("Game Board setup is complete");
 
-//END SETUP
+//Stage 0 - Core code - DONE
+	//Setup Board objects, players, cities, cards
+	//draw basic UI
+	//draw board
+	//one-off setup functions
 
-//draw screen
-
-//MAINLOOP
-playLoop(board.players.length);
+//stage 1 - Mainloop (make core gameplay loop) - June
 	//chooseplayer Loop 1 
-	//choices x 4 Loop 2 inside   a. move  b. treat c. cure d. build. e.skip.
-	//dealPcards
-	//infect()
+	//****I AM HERE: choices :  a. move  b. treat c. cure d. build. e.skip. Y
+	//deal player Cards
+	//infection stage
+	//choose next player
 //ENDMAINLOOP
 
-//SPECIAL
-	//epidemic 
-	//outbreak
-	//eventCard
-	//classEffect
+//Stage 2 - Special events July (make entire game playable)
+	//epidemic
+	//cured-eradicated effects
+	//outbreak 
+	//eventCard - all do one thing for now.
 	//gameOver
-//EndSpecial
+	//EndSpecial
 
-console.log(board);    
-var diseaseTotal = board.redPool + board.blackPool + board.bluePool + board.yellowPool;
-console.log(diseaseTotal);              
+//Stage 3 - Extras - August ()
+	//Class Effects
+	//All Event Card effects
+	//Choose players
+	//choose difficulty
 
+//Stage 4 - Prettify - September
+	//Help text (instructions, tooltips)
+	//general prettying of things
+	//music
+	//sound
+	//refactor code
+	
+//Stage 5 - Go Public! - October
+	//-Host it up somewhere
 
-
-//Need to do cards section
-//buttons bar.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//promatically create hands depending on number of players.
-// createHands(board.players.length);
-// function createHands(players){
-// 	console.log("this is last?")
-// 	var handCode = "";
-// 	var playerHand = document.createElement("div");
-// 	var t = document.createTextNode("hello");
-// 	playerHand.appendChild(t);
-// 	document.getElementById("status").appendChild(playerHand);
-
-// 	if (players===4){
-// 		handCode = "meow we have 4 players";
-		
-// 	} else {
-// 		handCode = "we dont have 4 players";
-// 	}
-// 	return handCode;
-// };
+//Bonus Stage - Extras
+          //more classes
+		  //expansion stuff
+		  //more event cards
+		  //more music
+		  //backend saving/scoring/stats
