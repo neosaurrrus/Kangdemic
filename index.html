@@ -7,66 +7,69 @@
 	<link type="text/css" href="resources/css/kangdemic.css" rel="stylesheet" />
 </head>
 <body>
-    <div id="grid-container">
-        <div class="status">
-            <span id="cureStatus"></span><span id="cubesLeft"></span><span id=infectionRate></span><span id=cardsLeft></span><span id=outbreaks></span>
-        </div>
-        <div id="main" class="free dragscroll">
-          <canvas id="map" width="4000" height= "2000">
-          </canvas>       
-        </div>
-        <div id="options">
-            <div id="playerDisplay">PlayerName</div>
-            <div id ="buttonsContainer">
+    <div id="gameWrapper">
+        <div id="popUp" class="hidden"></div>
+        <div id="grid-container">
+            <div class="status">
+                <span id="cureStatus"></span><span id="cubesLeft"></span><span id=infectionRate></span><span id=cardsLeft></span><span id=outbreaks></span>
             </div>
-            <div id="actionDisplay">Actions</div>
-        </div>
-        <div id="cards">
-            <div id="p0hand" class="handTitle">Player 1's Hand
-                <div class="card" id="p00" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p01" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p02" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p03" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p04" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p05" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p06" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p07" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p08" onClick="cardClick(this.id)"></div> 
+            <div id="main" class="free dragscroll">
+            <canvas id="map" width="4000" height= "2000">
+            </canvas>       
             </div>
-             <div id="p1hand" class="handTitle">Player 2's Hand
-                <div class="card" id="p10" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p11" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p12" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p13" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p14" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p15" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p16" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p17" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p18" onClick="cardClick(this.id)"></div> 
-           </div>
-         <div id="p2hand" class="handTitle">Player 3's Hand
-                <div class="card" id="p21" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p20" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p22" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p23" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p24" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p25" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p26" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p27" onClick="cardClick(this.id)"></div> 
-                <div class="card" id="p28" onClick="cardClick(this.id)"></div> 
-         </div>
-         <div id="p3hand" class="handTitle">Player 4's Hand
-            <div class="card" id="p30" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p31" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p32" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p33" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p34" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p35" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p36" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p37" onClick="cardClick(this.id)"></div> 
-            <div class="card" id="p38" onClick="cardClick(this.id)"></div> 
-        </div>
-    </div> <!-- grid container end-->
+            <div id="options">
+                <div id="playerDisplay">PlayerName</div>
+                <div id ="buttonsContainer">
+                </div>
+                <div id="actionDisplay">Actions</div>
+            </div>
+            <div id="cards">
+                <div id="p0hand" class="handTitle">Player 1's Hand
+                    <div class="card" id="p00" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p01" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p02" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p03" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p04" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p05" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p06" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p07" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p08" onClick="cardClick(this.id)"></div> 
+                </div>
+                <div id="p1hand" class="handTitle">Player 2's Hand
+                    <div class="card" id="p10" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p11" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p12" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p13" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p14" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p15" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p16" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p17" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p18" onClick="cardClick(this.id)"></div> 
+            </div>
+            <div id="p2hand" class="handTitle">Player 3's Hand
+                    <div class="card" id="p21" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p20" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p22" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p23" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p24" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p25" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p26" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p27" onClick="cardClick(this.id)"></div> 
+                    <div class="card" id="p28" onClick="cardClick(this.id)"></div> 
+            </div>
+            <div id="p3hand" class="handTitle">Player 4's Hand
+                <div class="card" id="p30" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p31" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p32" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p33" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p34" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p35" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p36" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p37" onClick="cardClick(this.id)"></div> 
+                <div class="card" id="p38" onClick="cardClick(this.id)"></div> 
+            </div>
+        </div> <!-- grid container end-->
+</div>
 </body>
 <script src="resources/js/game.js"></script>
 </html>

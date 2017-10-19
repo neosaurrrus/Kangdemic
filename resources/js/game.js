@@ -128,10 +128,8 @@ function findCity(city){
 			ctx.fillRect(board.cities[l].cityX - 20 + (i*10), board.cities[l].cityY - 22, 20, 20);
 		};
 	}; //canvas context
-
 console.log("end of drawing");
 }; //draw end
-
 
 function City(name, color, population, linkedCities, cityX, cityY, researchStation) { //builds the City models.
 	this.name = name,
@@ -386,7 +384,7 @@ var outBreak = function(city, color){ //what to do if outbreak
 		};
 }; //end of outBreak
 
-var checkOutbreak = function(city, color){
+var checkOutbreak = function(city, color){ //checks which colour an outbreak is.
 	console.log("checking for outbreaks in " + city.name + ". It currently has the following RED - BLU - BLA - YEL" + city.red + city.blue + city.black + city.yellow);
 	var outbreakColor = "none";
 	if (city.red > 3){outbreakColor = "red";};
@@ -467,8 +465,21 @@ var setupControls = function(){
 	document.getElementById("map").addEventListener("mouseup", checkClickLocation);
 	playerUpdate();
 };
-//refresh statusbar
 
+var pauseControls = function(){
+	buttonsUpdate();
+	document.getElementById("pass").removeEventListener("mouseup", passAction);
+	document.getElementById("event").removeEventListener("mouseup", eventAction);
+	document.getElementById("cure").removeEventListener("mouseup", cureAction);
+	document.getElementById("trade").removeEventListener("mouseup", tradeAction);
+	document.getElementById("build").removeEventListener("mouseup", buildAction);
+	document.getElementById("treat").removeEventListener("mouseup", treatAction);
+	document.getElementById("move").removeEventListener("mouseup", moveAction);
+	document.getElementById("map").removeEventListener("mouseup", checkClickLocation);
+	playerUpdate();
+};
+
+//refresh statusbar
 var statusBar= function(){
 document.getElementById("cureStatus").innerHTML = "Cure Progress: " + "<span class=red>" + board.cures.redCureStatus + "</span>" + "<span class=blue>" + "    " + board.cures.blueCureStatus + "</span>"+ "<span class=yellow>" + " " + board.cures.yellowCureStatus + "</span>"+ "<span class=black>"+ "    " + board.cures.blackCureStatus+ "</span>"; 
 document.getElementById("cubesLeft").innerHTML = "Disease Cubes Left: " + "<span class=red>" + board.redPool + "</span> " + "<span class=blue>" + board.bluePool + "</span>" + "<span class=yellow>" + " " + board.yellowPool + "</span>" + "<span class=black>" + " " + board.blackPool + "</span>"
@@ -513,8 +524,7 @@ var cardsUpdate = function(){  //Updates the hands shown with latest from array.
 			if (board.players[i].hand[j].name === board.players[i].location){
 				board.players[i].hand[j].trade = true;
 				console.log("tradable card!" + board.players[i].hand[j].trade);
-				//document.getElementById(playerHandID).className = "Card " + trade;
-			} //endif
+			};
 		}//End - For each Card in Hand
 	} //end - For all players
 } //end updatecards
@@ -595,68 +605,158 @@ var eventAction = function(){   //make them all an easy one for now..
 	//DONT lose an action
 };
 
-var cureAction = function(){
+const cureAction = function(){
 	console.log("you hit the CURE button yay");
-	var redCount = 0;
-	var blueCount = 0;
-	var blackCount = 0;
-	var yellowCount = 0;	
-	var cardsToCure = 5;
+	let redCount = 0;
+	let blueCount = 0;
+	let blackCount = 0;
+	let yellowCount = 0;	
+	let cardsToCure = 2;
+	let cityIndex = board.cities.findIndex(findCity);
 	board.tableCity = board.players[board.controls.sequence].location;
-	var cityIndex = board.cities.findIndex(findCity);
-	if (board.cities[cityIndex].researchStation){
-		console.log("Research Centre Found here, you can cure if you have enough cards of a disease");
-		if (board.players[board.controls.sequence].hand.length <= cardsToCure){ //or lots of things
-			console.log("Not enough cards to cure, returning")
-			//return
-		}
-			for(var i=0; i<board.players[board.controls.sequence].hand.length; i++){ //Counting up the Cards
-				if (board.players[board.controls.sequence].hand[i].color === "Red"){
-					redCount++
-				} else if(board.players[board.controls.sequence].hand[i].color === "Blue"){
-					blueCount++
-				} else if(board.players[board.controls.sequence].hand[i].color === "Black"){
-					blackCount++
-				} else if(board.players[board.controls.sequence].hand[i].color === "Yellow"){
-					yellowCount++
-				};
-			}
-			console.log (redCount +" " + blueCount +" "+ blackCount +" "+ yellowCount + "But curing isnt in yet");
-			//***Add Curing once playuers can get more cards */
 
+	if (board.players[board.controls.sequence].hand.length < cardsToCure){ //or lots of things
+		console.log("Not enough cards to cure anything, returning")
+		return;
+	};
+	if (!board.cities[cityIndex].researchStation){
+		console.log("No research centre here");
+		return
+	};
+	
+	
+	for(var i=0; i<board.players[board.controls.sequence].hand.length; i++){ //Counting up the Cards
+		if (board.players[board.controls.sequence].hand[i].color === "Red"){redCount++} 
+		else if (board.players[board.controls.sequence].hand[i].color === "Blue"){blueCount++} 
+		else if (board.players[board.controls.sequence].hand[i].color === "Black"){blackCount++} 
+		else if(board.players[board.controls.sequence].hand[i].color === "Yellow"){yellowCount++};
+	};
+	console.log (redCount +" " + blueCount +" "+ blackCount +" "+ yellowCount);
+	
+	if (redCount >= cardsToCure){cureDisease("Red")}
+	else if (blueCount >= cardsToCure){cureDisease("Blue")}
+	else if (yellowCount >= cardsToCure){cureDisease("Yellow")}
+	else if (blackCount >= cardsToCure){cureDisease("Black")}
+	else {
+		console.log ("Dont have enough of one card colour to cure");
 		};
-			
-	
-	//*** Scientist *
-	//if board.players[board.controls.sequence].location has research station = true AND cardsToCure 
-	
-
-	//if 5 then update curestatus, 
-	//need to change treatPower
-	//draw, actionupdate
 };
+
+const cureDisease = color =>{
+//confirm
+//remove cards
+//set cure status
+//set up checks where it matters
+};
+
+
+
+
 var tradeAction = function(){
 	console.log("you hit the Trade button yay");
 	board.tableCity = board.players[board.controls.sequence].location;
+	var potentialCard = false;
+	let partners = [];
+	let cardHolder = []; 
 	for (var i=0; i<board.players.length; i++){ //for each player
-		for(var j=0; j<board.players[i].hand.length; j++){ //for each card in hand
-			if (board.players[i].hand[j].trade === true && board.players[i].hand[j].name === board.tableCity){
-				var cardHolder = board.players[i]
-				var partners = //players where the location matches table city
-				console.log("You can trade the following card:" + board.players[i].hand[j].name);
-				// slide up div
-				//Select a card to trade
-				//Select a player to trade
-				//Trading....
-			} //end if
-		} //end of for each card
-	} //end of for each player
-			
-		//if true, check for valid recipients
-			//if 1, move card to valid player
-			//if multiple, prompt to select player
-		//if false, change status to "this card cannot be traded"
-}
+		if (board.players[i].location === board.tableCity){
+			partners.push(i);
+			for(var j=0; j<board.players[i].hand.length; j++){ //for each card in hand
+				if (board.players[i].hand[j].name === board.tableCity){
+						console.log("You can trade "+ board.players[i].hand[j].name);
+						potentialCard = board.players[i].hand[j].name;
+						cardHolder.push(i)
+						cardHolder.push(j);//Assings if they are not there
+				};
+			};
+		};
+	};
+	let recipients = partners.filter((player) => {
+		return player !== cardHolder[0];
+	})
+	const popUpInfo = {
+		cardHolder,
+		recipients,
+		potentialCard, 
+		possible: potentialCard,
+		type: "Trading Cards", 
+		currentPlayer: board.players[board.controls.sequence].name
+	};
+	console.log(popUpInfo);
+	tradePopUp(popUpInfo);
+};
+	
+function tradePopUp({type, potentialCard, possible, currentPlayer,cardHolder, recipients} ){ //Deconstruction woo!
+	pauseControls(); // pause other buttons (NEED TO PAUSE CARDS!)
+	let div = document.getElementById("popUp");
+	div.style.display = "block";
+	let tradePossible = false;
+	if (cardHolder.length<2) {
+		var message = "Noone here has the " + board.players[board.controls.sequence].location + " card.";
+		var buttonHTML = ("<h1>"+ type+"</h1><br><p>" + message +"<br><br><button class='control' id='cancel'>Cancel</button>");
+	} else if (recipients.length<1) {
+		var message =  "There is noone else here to trade with.";
+		var buttonHTML = ("<h1>"+ type+"</h1><br><p>" + message +"<br><br><button class='control' id='cancel'>Cancel</button>");
+	} else {
+		tradePossible = true;
+		var message = "You can trade the " + possible + " card.<br><br><button class='control' id='okTrade'>Trade</button>";
+		var buttonHTML = ("<h1>"+ type+"</h1><br><p>" + message +"<br><br><button class='control' id='cancel'>Cancel</button>");
+		//Find 
+	};
+	div.innerHTML = buttonHTML
+	document.getElementById("gameWrapper").appendChild(div);
+
+
+	if (tradePossible === true){
+		document.getElementById("okTrade").addEventListener("mouseup",()=>{
+			div.style.display = "none";
+			if (cardHolder[0] === board.controls.sequence){
+				if (recipients.length === 1){
+					console.log("giving to the only other player here")
+					console.log(recipients[0]);
+					board.players[recipients[0]].hand.push(board.players[cardHolder[0]].hand[cardHolder[1]]);
+					board.players[cardHolder[0]].hand.splice(cardHolder[1],1);
+					screenRefreshAction();
+				} else {
+					console.log("Must determine who you are giving to")
+					console.log(recipients);
+					let playerButtons = "";
+					recipients.forEach(recipient => {
+						recipientName = board.players[recipient].name
+						recipientRole = board.players[recipient].role
+						playerButtons += "<button class='control' id='player" + recipient + "'>"+recipientName+" - " + recipientRole+"</button>    ";
+					});
+					console.log(playerButtons);
+					let buttonHTML = ("<h1>Select Player</h1><br><p>You can give the card to the following:</p><br>" + playerButtons + "<br><br><button class='control' id='cancel'>Cancel</button>")
+					div.innerHTML = buttonHTML;
+					div.style.display = "block";
+					//Add event listeners for each player
+					recipients.forEach(recipient => {
+						let buttonId = "player"+recipient;
+						document.getElementById(buttonId).addEventListener("mouseup",()=>{
+							div.style.display = "none";
+							board.players[recipient].hand.push(board.players[cardHolder[0]].hand[cardHolder[1]]);
+							board.players[cardHolder[0]].hand.splice(cardHolder[1],1);
+							screenRefreshAction();
+							document.getElementById("cancel").removeEventListener("mouseUp", setupControls())
+						});
+					
+					});
+
+				}
+			} else { 
+				console.log("taking from the player holding the card");
+				board.players[board.controls.sequence].hand.push(board.players[cardHolder[0]].hand[cardHolder[1]]);
+				board.players[cardHolder[0]].hand.splice(cardHolder[1],1);
+				screenRefreshAction();
+			};
+	})};
+	document.getElementById("cancel").addEventListener("mouseup",()=>{
+		div.style.display = "none";
+		console.log ("popup closed");
+		document.getElementById("cancel").removeEventListener("mouseUp", setupControls())
+	});
+};
 
 var buildAction = function(){
 	console.log("you hit the BUILD button yay");
@@ -756,24 +856,68 @@ var checkClickLocation = function (canGoTo){
 	screenRefresh();
 };
 
+let discardCards = player =>{
+	pauseControls()
+	let div = document.getElementById("popUp");
+	div.style.display = "block";
+	let discardButtons = "";
 
-var endTurn = function(){ //what happens at the end of a turn
-	//check Hand Limit
-	dealPCardsPlayer(board.controls.sequence); //deal out  player cards to the current player
-	//Infect based on rate
-	var isEpi = false;
-	infection(isEpi, 1); //infect cities
+	player.hand.forEach(card => {
+			let cardName = card.name;
+			discardButtons += "<button class='control' id='card" + player.hand.indexOf(card) + "'>"+cardName+"</button><br>";
+		});
+
+	var buttonHTML = ("<h1>Discard a card</h1><br><p>You have too many cards, select a card to discard:<br>"+discardButtons);
+	div.innerHTML = buttonHTML;
+
+	player.hand.forEach(card => {
+		board.tableCard = card;
+		let cardId = player.hand.indexOf(card);
+		let buttonId = "card"+player.hand.indexOf(card);
+		board.tableCardIndex = player.hand.indexOf(card);
+		document.getElementById(buttonId).addEventListener("mouseup",()=>{
+			let card = board.tableCard
+			div.style.display = "none";
+			console.log("card:" + card);
+		    console.log("buttonid:" + buttonId + "  cardId: " +cardId );
+			//board.players[board.controls.sequence].hand[board.tableCardIndex].name
+			let discard = player.hand.splice(cardId,1);
+			board.pPile.push(discard);
+			screenRefresh();
+			checkHandLimit();
+			
+		});
+	});
+};
+
+const checkHandLimit = ()=>{
+	if (board.players[board.controls.sequence].hand.length > 7) { //check if over hand limit of ....3 right now.
+		discardCards(board.players[board.controls.sequence]);
+	} else { 
+		infection(false , 1); //infect cities
+		nextPlayer();
+		screenRefresh();
+	};
+};
+
+const nextPlayer =()=>{
 	board.controls.sequence++ //Goto next player
 	board.controls.actions = 4;   //needs to be variable for Generalist
 	if (board.controls.sequence === board.players.length){
 		board.controls.sequence = 0;
-		};
-    playerUpdate();
+	};
+};
+
+var endTurn = function(){ //what happens at the end of a turn
+	console.log("End of Turn!");
+	dealPCardsPlayer(board.controls.sequence); //deal out  player cards to the current player
+	checkHandLimit(); //checks handlimit and does infection and next player steps
+    screenRefresh();
 }; //End of EndTurn
 
 var screenRefreshAction = function (){
-	statusBar();
 	actionUpdate();
+	statusBar();
 	buttonsUpdate(); 
 	cardsUpdate();
 	setupControls();
@@ -811,7 +955,7 @@ var screenRefresh = function(){
 
 //stage 1 - Mainloop (make core gameplay loop) -  mOSTly DONE
 	//chooseplayer Loop 1 
-	//****I AM HERE: choices :  c. cure e.trade
+	//****in Progress: choices :  c. cure 
 	//deal player Cards
 	//infection stage
 	//choose next player
@@ -821,9 +965,9 @@ var screenRefresh = function(){
 	//epidemic - Done
 	//outbreak - DONE
 	//eventCard - all do one thing for now. DONE
-	//Hand Limit - In progress WITH Interface
-	//gameOver - 
-	//EndSpecial
+	//Hand Limit - Done
+	//gameOver -   NEXT
+	//WinConditions  - NEXT
 	//cured-eradicated effects
 
 //Stage 3 - Extras - 
@@ -832,14 +976,14 @@ var screenRefresh = function(){
 	//Choose players
 	//choose difficulty
 
-//Stage 4 - Prettify - September
+//Stage 4 - Prettify -
 	//Help text (instructions, tooltips)
 	//general prettying of things
 	//music
 	//sound
 	//refactor code
 	
-//Stage 5 - Go Public! - October
+//Stage 5 - Go Public! -
 	//-Host it up somewhere
 
 //Bonus Stage - Extras
