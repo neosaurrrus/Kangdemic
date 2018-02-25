@@ -21,6 +21,7 @@ var board = {
 			yellowCureStatus:"Active",
 			blackCureStatus: "Active"
 		},
+	
 	bluePool: 24,
 	redPool: 24,
 	yellowPool: 24,
@@ -30,10 +31,17 @@ var board = {
 	
 board.controls.actions = 4; //how many actions per turn
 board.controls.sequence = 0; //tracks who's turn it is.
+board.controls.cardsToCure = 2; //how many cards it normally takes to cure
+board.controls.treatLevel = 1; //normal treat action power
+board.cures.eradArray = [];
 
 
 function findCity(city){
-	            return city.name == board.tableCity;
+	return city.name == board.tableCity;
+}
+
+const findCityByName = (citySearch) => {
+	return board.cities.find(city => city.name === citySearch);
 };
 
 //Drawing the board over a picture of the world.
@@ -171,7 +179,7 @@ function Player(name, role,hand, location){
 	this.location = "Atlanta" 
 };
 function Difficulty(name, epiCards){
-	this.name = name
+	this.name = name,
 	this.epiCards = epiCards;
 };
 
@@ -211,7 +219,7 @@ var cityBuild = function worldBuilder(){ //Build cities based on properties. Can
 	board.cities.push(new City("Kolkata", "Black", "12000000", ["Delhi","Chennai", "Bangkok", "Hong Kong"],2980,700));
 	board.cities.push(new City("Baghdad", "Black", "12000000", ["Istanbul", "Cairo", "Riyadh", "Karachi", "Tehran"],2500,620));
 	board.cities.push(new City("Tehran", "Black", "12000000", ["Moscow", "Baghdad", "Delhi"],2700,520));
-	board.cities.push(new City("Istanbul", "Black", "12000000", ["Baghdad", "St Petersburg", "Milan", "Algiers", "Cairo", "Riyadh", "Moscow"],2320,536));
+	board.cities.push(new City("Istanbul", "Black", "12000000", ["Baghdad", "St Petersburg", "Milan", "Algiers", "Cairo", "Moscow"],2320,536));
 	board.cities.push(new City("Moscow", "Black", "12000000", ["St Petersburg", "Istanbul", "Tehran"], 2550,366));
 	board.cities.push(new City("Jakarta", "Red", "5000000", ["Chennai", "Bangkok", "Ho Chi Minh City", "Sydney"],3100,1000));
 	board.cities.push(new City("Ho Chi Minh City", "Red", "12000000", ["Hong Kong", "Bangkok","Jakarta", "Manila"],3170,880));
@@ -259,30 +267,17 @@ var playerBuild = function(){
 	var players=4; //choose number of players, 4 for now.
 	//build an array of players. Fixed names and roles for now
 	for(var i = 0; i<players; i++){ //for each player choose name and role
-		var name = ["Tom","Jane","Mike","Sam"];
+		var name = ["Alice","Bob","Charlie","Dave"];
 		var role = ["Medic","Generalist","Scientist","Researcher"];
 		board.players.push(new Player(name[i],role[i]));
 	};
 	console.log("Created Players, 4 for now...");
 };
 
-var epidemic = function(){
-	console.log("EPIDEMIC YO");
-	board.currentInfectionLevel++ //increase the infection rate
-	console.log(board.currentInfectionLevel);
-	let card = board.iDeck[0];
-	console.log("card at the bottom of the pile is:" + card.name) ;
-	var isEpi = true;
-	infection(isEpi, 3);
-	shuffle(board.iPile);
-	while (board.iPile.length > 0){ //move iPile to the top of iDeck
-		board.iDeck.push(board.iPile.pop());
-	};
-};
-
 var dealPCardsPlayer= function(player){ //Deal player cards to a player
 	for (var i=0; i<2;i++){ //deal 2 cards
 					var card = board.pDeck.pop();
+					checkLossCondition("Player Cards");
 					//is it an epidemic card
 					if(card.type === "epidemic"){
 						board.pPile.push(card);
@@ -328,26 +323,17 @@ var splitDeck = [];
 };
 
 
-function findCardCity(city){
+function findCardCity(city){ //find the city the card represents
 	var cityName = board.tableCard.name
 	return city.name === board.tableCard.name;
 };
 
-function findPlayerCity(city){
+function findPlayerCity(city){ //find the city the current player is in
 	var cityName = board.tableCard.name
 	return city.name === board.tableCard.name;
 };
 
-var gameOver = function(){
-	alert("Game Over Buddy")
-}
-var checkGameOver = function(){
-	//is Outbreaks === 8
-	//is pDeck 1 or Less at the end of the turn?
-	//any of the disease cube pools empty?
-};
-
-var checkInfections = function(){ //Reduce any extra cubes down to 3 AND Calculate Disease pools
+const checkCubePools= function(){ //Reduce any extra cubes down to 3 AND Calculate Disease pools
 	board.redPool = 24;
 	board.bluePool = 24;
 	board.blackPool = 24;
@@ -362,71 +348,88 @@ var checkInfections = function(){ //Reduce any extra cubes down to 3 AND Calcula
 		board.blackPool = board.blackPool - board.cities[i].black;
 		board.yellowPool = board.yellowPool - board.cities[i].yellow;
 	};
+	checkLossCondition("Cubes");
 };
 
-var outBreak = function(city, color){ //what to do if outbreak
-	if(board.controls.outbreakCity === "none") {
-		board.controls.outbreakCity = city.name;
-	};
-	board.outbreaks++
-	console.log(city.name + " has Outbroken! Source outbreak city is " + board.controls.outbreakCity + ". This is an outbreak of the following color:" +color);
-		for(var i = 0; i < city.linkedCities.length; i++){
-			board.tableCity = city.linkedCities[i]
-			var cityIndex = board.cities.findIndex(findCity);
-			if(city.linkedCities[i] !== board.controls.outbreakCity){
-				console.log("Outbreak has spread to: " + board.cities[cityIndex].name);
-				if (color === "red"){board.cities[cityIndex].red++};
-				if (color === "blue"){board.cities[cityIndex].blue++};
-				if (color === "black"){board.cities[cityIndex].black++};
-				if (color === "yellow"){board.cities[cityIndex].yellow++};
-				checkOutbreak(board.cities[cityIndex], true); //did the Outbreaking city have 3 cubes ? If so its gonna outbreak.
+
+
+const infection = function(isEpi, target, rate){ //infects cities
+	board.controls.outbreakArray=[];
+	let redErad = false;
+	let blueErad = false;
+	let blackErad = false;
+	let yellowErad = false;
+	if (board.cures.redCureStatus === "Eradicated") redErad = true;
+	if (board.cures.blueCureStatus === "Eradicated") blueErad = true;
+	if (board.cures.blackCureStatus === "Eradicated") blackErad = true;
+	if (board.cures.yellowCureStatus === "Eradicated") yellowErad = true;
+
+
+	infection.singleInfection = (target, rate, outBreakCity) => {
+		console.log("Infecting" + target.name + " it will get " + rate + "cube")
+		if (target.color === "Red"){
+			if (redErad) rate = 0;
+			target.red = target.red + rate;
+			if (target.red > 3){
+				target.red = 3
+				outBreak(target);
 			};
 		};
-}; //end of outBreak
-
-var checkOutbreak = function(city, color){ //checks which colour an outbreak is.
-	console.log("checking for outbreaks in " + city.name + ". It currently has the following RED - BLU - BLA - YEL" + city.red + city.blue + city.black + city.yellow);
-	var outbreakColor = "none";
-	if (city.red > 3){outbreakColor = "red";};
-	if (city.blue > 3){outbreakColor = "blue";};
-	if (city.black > 3){outbreakColor = "black";};
-	if (city.yellow > 3){outbreakColor = "yellow"};
-	if (outbreakColor !== "none") {
-		outBreak(city, outbreakColor);
-	};
-}; //end of checkOutbreak 
-
-var infection = function(isEpi, rate){ //infects cities
-	board.controls.outbreakCity = "none";
-	for (var i=0; i<board.iRate[board.currentInfectionLevel]; i++){
-		if (isEpi === true){
-			alert("Epipath");
-			board.tableCard = board.iDeck.shift();
-			var rate = 3;
-		} else {
-		board.tableCard = board.iDeck.pop();
-		var rate = 1;
-		};
-		var target = board.cities[(board.cities.findIndex(findCardCity))];
-		if (target.color === "Red") {
-			target.red = target.red + rate;
-		} else if (target.color === "Blue") {
+		if (target.color === "Blue"){
+			if (blueErad) rate = 0;
 			target.blue = target.blue + rate;
-		} else if (target.color === "Black"){
-			target.black = target.black + rate;
-		} else if (target.color === "Yellow"){
-			target.yellow= target.yellow + rate;
-		};	
-		console.log(board.tableCard.name + " has been infected! It is now: Red - " + target.red + " Blue - " + target.blue +  " Black - " + target.black + " Yellow - "+ target.yellow);
-		if (target.red > 3 || target.blue > 3 || target.black > 3 || target.yellow > 3){
-			checkOutbreak(target);
-			checkInfections();
-			return;
-		}
-		board.iPile.push(board.tableCard);
-		if (rate === 3){
-			return;
+			if (target.blue > 3){
+				target.blue = 3
+				outBreak(target);
+			};
 		};
+		if (target.color === "Black"){
+			if (blackErad) rate = 0;
+			target.black = target.black + rate;
+			if (target.black > 3){
+				target.black = 3
+				outBreak(target);
+			};
+		};
+		if (target.color === "Yellow"){
+			if (yellowErad) rate = 0;
+			target.yellow = target.yellow + rate;
+			if (target.yellow > 3){
+				target.yellow = 3
+				outBreak(target);
+			};
+		};
+	};
+
+	const outBreak = (target) => { //what to do if outbreak
+		board.controls.outbreakArray.push(target);
+		board.outbreaks++
+		if (board.outbreaks  > 10) return;
+		checkLossCondition("Outbreaks");
+		console.log(target.name + " has Outbroken! Source outbreak city is " + target.name + ". This is an outbreak of the following color:" +target.color);
+		board.tableColor = target.color;
+		target.linkedCities.forEach(linkedCity=>{
+			let alreadyOutbreaked = board.controls.outbreakArray.some(city => city.name === linkedCity);
+			if (alreadyOutbreaked === false){
+				let linkedTarget = findCityByName(linkedCity)
+				infection.singleInfection(linkedTarget, 1)
+			};
+		});
+	}; //end of outBreak
+
+	if (isEpi === true){
+		infection.singleInfection(target, rate);
+		checkCubePools();
+		return;
+	}
+	
+	for (var i=0; i<board.iRate[board.currentInfectionLevel]; i++){
+		var rate = 1;
+		board.tableCard = board.iDeck.pop();
+		var target = board.cities[(board.cities.findIndex(findCardCity))];		
+		infection.singleInfection(target,rate);
+		checkCubePools();
+		board.iPile.push(board.tableCard); 
 	};
 };
 
@@ -446,11 +449,28 @@ var initialInfection = function(){  //initial Infection Stage
 			};
 			board.iPile.push(board.tableCard);
 			console.log(board.tableCard.name);
-			checkInfections();
+			checkCubePools();
 		};
-		 //place into infection Pile.
 	};
 };
+
+
+var epidemic = function(){
+	board.controls.outbreakArray=[];
+	board.currentInfectionLevel++ //increase the infection rate
+	let card = board.iDeck[0];
+	console.log("card at the bottom of the pile is:" + card.name) ;
+	board.tableCard = board.iDeck.shift()
+	console.log (board.tableCard.name)
+	var target = board.cities[(board.cities.findIndex(findCardCity))];		
+	board.iPile.push(board.tableCard);
+	shuffle(board.iPile);
+	while (board.iPile.length > 0){ //move iPile to the top of iDeck
+		board.iDeck.push(board.iPile.pop());
+	};
+	infection(true,target, 3);
+};
+
 
 //setup controls including buttons and display
 var setupControls = function(){
@@ -497,6 +517,7 @@ var playerUpdate = function(){ //Updates Player Information and Location
 };
 var actionUpdate = function(){ //updates variables after an action has been taken
 	board.controls.charterJet = false;
+	medicCheck();
 	board.controls.actions--;
 	document.getElementById("actionDisplay").innerHTML = "Actions Remaining: "  + board.controls.actions;
 	if (board.controls.actions===0){
@@ -523,12 +544,10 @@ var cardsUpdate = function(){  //Updates the hands shown with latest from array.
 			//check if it is tradable by checking location ofplayer 
 			if (board.players[i].hand[j].name === board.players[i].location){
 				board.players[i].hand[j].trade = true;
-				console.log("tradable card!" + board.players[i].hand[j].trade);
 			};
 		}//End - For each Card in Hand
 	} //end - For all players
 } //end updatecards
-
 
 function cardClick(cardID){ //Figure What to do when a Card is Clicked on
 	if (board.controls.charterJet===true){ //stop other cards being used if charterJetting
@@ -568,6 +587,13 @@ var charterJet = function(cardHand,currentPlayerHand){ //if you click on card in
 	document.getElementById("buttonsContainer").innerHTML = "Chartering a Jet, you can go anywhere";
 };
 
+var publicFlight = function(cardHand,currentPlayerHand,cityCard){
+	board.players[board.controls.sequence].location = currentPlayerHand[cardHand].name;
+	var removedCard = currentPlayerHand.splice(cardHand,1);
+	board.pPile.push(removedCard[0]);
+	screenRefreshAction();
+};
+
 var eventUse = function(cardHand, currentPlayerHand, eventCard){
 	var currentPlayerHand = board.players[board.controls.sequence].hand
 	console.log(eventCard);
@@ -575,25 +601,12 @@ var eventUse = function(cardHand, currentPlayerHand, eventCard){
 	board.pPile.push(removedCard[0]);
 	//FINISH EVENT CARDS HERE
 	board.controls.actions+=3;
-	cardsUpdate();
-	actionUpdate();
-	screenRefresh();
+	screenRefreshAction();
 };
-var publicFlight = function(cardHand,currentPlayerHand,cityCard){
-	board.players[board.controls.sequence].location = currentPlayerHand[cardHand].name;
-	var removedCard = currentPlayerHand.splice(cardHand,1);
-	board.pPile.push(removedCard[0]);
-	cardsUpdate();
-	actionUpdate();
-	screenRefresh();
-};
-
 
 //Events that occur upon hitting control buttons
-var passAction = function(){            //Pass an action - DONE!
-	cardsUpdate();
-	actionUpdate();
-	screenRefresh();
+var passAction = function(){            //Pass an action 
+	screenRefreshAction();
 	};
 
 var eventAction = function(){   //make them all an easy one for now..
@@ -606,16 +619,17 @@ var eventAction = function(){   //make them all an easy one for now..
 };
 
 const cureAction = function(){
-	console.log("you hit the CURE button yay");
 	let redCount = 0;
 	let blueCount = 0;
 	let blackCount = 0;
 	let yellowCount = 0;	
-	let cardsToCure = 2;
 	let cityIndex = board.cities.findIndex(findCity);
+	let ctc = board.controls.cardsToCure;
+	if (board.players[board.controls.sequence].role === "Scientist") board.controls.cardsToCure--
+console.log("Need this many cards of a tyle to cure " + board.controls.cardsToCure);
 	board.tableCity = board.players[board.controls.sequence].location;
 
-	if (board.players[board.controls.sequence].hand.length < cardsToCure){ //or lots of things
+	if (board.players[board.controls.sequence].hand.length < board.controls.cardsToCure){ //or lots of things
 		console.log("Not enough cards to cure anything, returning")
 		return;
 	};
@@ -623,8 +637,7 @@ const cureAction = function(){
 		console.log("No research centre here");
 		return
 	};
-	
-	
+
 	for(var i=0; i<board.players[board.controls.sequence].hand.length; i++){ //Counting up the Cards
 		if (board.players[board.controls.sequence].hand[i].color === "Red"){redCount++} 
 		else if (board.players[board.controls.sequence].hand[i].color === "Blue"){blueCount++} 
@@ -633,130 +646,210 @@ const cureAction = function(){
 	};
 	console.log (redCount +" " + blueCount +" "+ blackCount +" "+ yellowCount);
 	
-	if (redCount >= cardsToCure){cureDisease("Red")}
-	else if (blueCount >= cardsToCure){cureDisease("Blue")}
-	else if (yellowCount >= cardsToCure){cureDisease("Yellow")}
-	else if (blackCount >= cardsToCure){cureDisease("Black")}
+	if (redCount >= board.controls.cardsToCure){cureDiseaseConfirmation("Red")}
+	else if (blueCount >= board.controls.cardsToCure){cureDiseaseConfirmation("Blue")}
+	else if (yellowCount >= board.controls.cardsToCure){cureDiseaseConfirmation("Yellow")}
+	else if (blackCount >= board.controls.cardsToCure){cureDiseaseConfirmation("Black")}
 	else {
 		console.log ("Dont have enough of one card colour to cure");
 		};
+	console.log("End of Curing Process Flow")
 };
 
-const cureDisease = color =>{
-//confirm
-//remove cards
-//set cure status
-//set up checks where it matters
-};
-
-
-
-
-var tradeAction = function(){
-	console.log("you hit the Trade button yay");
-	board.tableCity = board.players[board.controls.sequence].location;
-	var potentialCard = false;
-	let partners = [];
-	let cardHolder = []; 
-	for (var i=0; i<board.players.length; i++){ //for each player
-		if (board.players[i].location === board.tableCity){
-			partners.push(i);
-			for(var j=0; j<board.players[i].hand.length; j++){ //for each card in hand
-				if (board.players[i].hand[j].name === board.tableCity){
-						console.log("You can trade "+ board.players[i].hand[j].name);
-						potentialCard = board.players[i].hand[j].name;
-						cardHolder.push(i)
-						cardHolder.push(j);//Assings if they are not there
-				};
-			};
-		};
-	};
-	let recipients = partners.filter((player) => {
-		return player !== cardHolder[0];
-	})
-	const popUpInfo = {
-		cardHolder,
-		recipients,
-		potentialCard, 
-		possible: potentialCard,
-		type: "Trading Cards", 
-		currentPlayer: board.players[board.controls.sequence].name
-	};
-	console.log(popUpInfo);
-	tradePopUp(popUpInfo);
-};
-	
-function tradePopUp({type, potentialCard, possible, currentPlayer,cardHolder, recipients} ){ //Deconstruction woo!
-	pauseControls(); // pause other buttons (NEED TO PAUSE CARDS!)
+const cureDiseaseConfirmation = color =>{
+	let cureHTML = popUp("Curing " + color, "Are you sure you wish to do this?" )
+	let cureButtons = "";
+	let buttonHTML = (cureHTML + "<br><br><button class='control' id='ok'>Cure</button><br><br><button class='control' id='cancel'>Cancel</button>")
 	let div = document.getElementById("popUp");
-	div.style.display = "block";
-	let tradePossible = false;
-	if (cardHolder.length<2) {
-		var message = "Noone here has the " + board.players[board.controls.sequence].location + " card.";
-		var buttonHTML = ("<h1>"+ type+"</h1><br><p>" + message +"<br><br><button class='control' id='cancel'>Cancel</button>");
-	} else if (recipients.length<1) {
-		var message =  "There is noone else here to trade with.";
-		var buttonHTML = ("<h1>"+ type+"</h1><br><p>" + message +"<br><br><button class='control' id='cancel'>Cancel</button>");
-	} else {
-		tradePossible = true;
-		var message = "You can trade the " + possible + " card.<br><br><button class='control' id='okTrade'>Trade</button>";
-		var buttonHTML = ("<h1>"+ type+"</h1><br><p>" + message +"<br><br><button class='control' id='cancel'>Cancel</button>");
-		//Find 
-	};
-	div.innerHTML = buttonHTML
-	document.getElementById("gameWrapper").appendChild(div);
-
-
-	if (tradePossible === true){
-		document.getElementById("okTrade").addEventListener("mouseup",()=>{
-			div.style.display = "none";
-			if (cardHolder[0] === board.controls.sequence){
-				if (recipients.length === 1){
-					console.log("giving to the only other player here")
-					console.log(recipients[0]);
-					board.players[recipients[0]].hand.push(board.players[cardHolder[0]].hand[cardHolder[1]]);
-					board.players[cardHolder[0]].hand.splice(cardHolder[1],1);
-					screenRefreshAction();
-				} else {
-					console.log("Must determine who you are giving to")
-					console.log(recipients);
-					let playerButtons = "";
-					recipients.forEach(recipient => {
-						recipientName = board.players[recipient].name
-						recipientRole = board.players[recipient].role
-						playerButtons += "<button class='control' id='player" + recipient + "'>"+recipientName+" - " + recipientRole+"</button>    ";
-					});
-					console.log(playerButtons);
-					let buttonHTML = ("<h1>Select Player</h1><br><p>You can give the card to the following:</p><br>" + playerButtons + "<br><br><button class='control' id='cancel'>Cancel</button>")
-					div.innerHTML = buttonHTML;
-					div.style.display = "block";
-					//Add event listeners for each player
-					recipients.forEach(recipient => {
-						let buttonId = "player"+recipient;
-						document.getElementById(buttonId).addEventListener("mouseup",()=>{
-							div.style.display = "none";
-							board.players[recipient].hand.push(board.players[cardHolder[0]].hand[cardHolder[1]]);
-							board.players[cardHolder[0]].hand.splice(cardHolder[1],1);
-							screenRefreshAction();
-							document.getElementById("cancel").removeEventListener("mouseUp", setupControls())
-						});
-					
-					});
-
-				}
-			} else { 
-				console.log("taking from the player holding the card");
-				board.players[board.controls.sequence].hand.push(board.players[cardHolder[0]].hand[cardHolder[1]]);
-				board.players[cardHolder[0]].hand.splice(cardHolder[1],1);
-				screenRefreshAction();
-			};
-	})};
-	document.getElementById("cancel").addEventListener("mouseup",()=>{
-		div.style.display = "none";
-		console.log ("popup closed");
-		document.getElementById("cancel").removeEventListener("mouseUp", setupControls())
+	div.innerHTML = buttonHTML;
+	let ok = document.getElementById("ok")
+	let cancel = document.getElementById("cancel")
+	ok.addEventListener("mouseup", ()=>{ //CANT PASS TO EVENT HANDLER WTF?
+		console.log(div + "   ....is div.  " + color + "....is color")
+		cureCardSelection(color, 0);
+		return;
+	});
+	cancel.addEventListener("mouseup",()=>{
+		div.style.display = "none"
+		screenRefresh();
+		return;
 	});
 };
+
+const cureCardSelection = (color, cardsGiven) =>{
+	console.log(`cards given: ${cardsGiven} and Cards to cure: ${board.controls.cardsToCure}`)
+	if(cardsGiven === board.controls.cardsToCure){
+		cureColor(color);
+		return;
+	};
+	let ctc = board.controls.cardsToCure - cardsGiven;
+	cardsGiven = cardsGiven;
+	//WHILE CTC IS STILL >1 
+	let cureHTML = popUp("Select " + ctc + " card(s)", "Select the cards you wish to use for the cure <br>");
+	//popUp("Select " + ctc + " card(s)", "Select the cards you wish to use for the cure");
+	let playerHand = board.players[board.controls.sequence].hand;
+	document.getElementById("popUp").innerHTML = cureHTML;
+
+	playerHand.forEach(card =>{  //Show Cards to select
+		if (card.color=color){
+			cureHTML += `<button class='control' id='${playerHand.indexOf(card)}'>${card.name}</button><br>`
+			document.getElementById("popUp").innerHTML = cureHTML;
+		};
+	});
+	playerHand.forEach(card =>{  //Show Cards to select
+		document.getElementById(playerHand.indexOf(card)).addEventListener("mouseup",()=>{
+			let cardId = playerHand.indexOf(card.name);
+			let discard = playerHand.splice(cardId,1);
+			document.getElementById("popUp").style.display = "none";
+			board.pPile.push(discard);	
+			cardsGiven++
+			cureCardSelection(color, cardsGiven);
+		});
+	});
+};
+	
+const cureColor = (color)=>{
+	if (color === "Red") board.cures.redCureStatus = "Cured";
+	if (color === "Blue") board.cures.blueCureStatus = "Cured";
+	if (color === "Black") board.cures.blackCureStatus = "Cured";
+	if (color === "Yellow") board.cures.yellowCureStatus = "Cured";
+	alert(color + " has been cured!");
+	checkEradication(color);
+	checkWinCondition();
+	screenRefreshAction();
+};
+
+const checkEradication =()=>{
+	if (board.redPool === 24 && board.cures.redCureStatus === "Cured"){
+		board.cures.eradArray.push("Red");
+		board.cures.redCureStatus = "Eradicated";
+		alert("Red has been eradicated!");
+	};
+	if (board.bluePool === 24 && board.cures.blueCureStatus === "Cured"){
+		board.cures.eradArray.push("Blue");
+		board.cures.blueCureStatus = "Eradicated";
+		alert("Blue has been eradicated!");
+	};
+	if (board.blackPool === 24 && board.cures.blackCureStatus === "Cured"){
+		board.cures.eradArray.push("Black");
+		board.cures.blackCureStatus = "Eradicated";
+		alert("Black has been eradicated!");
+	};
+	if (board.yellowPool === 24 && board.cures.yellowCureStatus === "Cured"){
+		board.cures.eradArray.push("Yellow");
+		board.cures.yellowCureStatus = "Eradicated";
+		alert("Yellow has been eradicated!");
+	};
+	console.log(board.cures);
+	screenRefresh();
+};
+
+const checkWinCondition = (color)=>{
+	if (board.cures.redCureStatus !=="Active" && board.cures.blueCureStatus !=="Active" && board.cures.blackCureStatus !=="Active" && board.cures.yellowCureStatus !=="Active"){
+		alert("yay, you won");
+	};
+};
+
+const checkLossCondition = (reason)=>{
+	let loss = false;
+	screenRefresh();
+	if (board.pDeck.length <= 20 || board.outbreaks >= 8 || board.redPool < 0 ||board.blackPool < 0 ||board.bluePool < 0 ||board.yellowPool < 0) {
+		console.log("aww you lost because of " + reason + ". Everyone is now dead.");
+	};	
+};
+
+const playerFindByName = (name) => {
+	return board.players.find(player => player.name === name);
+};
+const cardFindIndex = (hand, cardName) => {
+	console.log(hand + cardName);
+	return hand.indexOf(hand.find(card => card.name === cardName));
+};
+const tradeAction = () =>{
+	const location = board.players[board.controls.sequence].location;
+	const currentPlayer = board.players[board.controls.sequence]
+	let localPlayers = [];
+	let giveCards = []
+	let takeCards = [];
+	let takePlayers = [];
+    let takeSelected = false;
+
+	const decideTrade = () =>{
+		popUp("Trading", "Do you wish to give or take cards?", ["Give", "Take"]);
+		document.getElementById("Give").addEventListener("mouseup",()=>{
+			popUpClose();
+			giveTrade();
+		});
+		document.getElementById("Take").addEventListener("mouseup",()=>{
+			popUpClose();
+			takeTrade();
+		});
+	};
+	const giveTrade = () =>{   //Determine what/who to give
+		let destinationName = localPlayers.map(localPlayer => localPlayer.name)
+		popUp("Giving Cards", "Who are you giving to?", destinationName);
+		localPlayers.forEach(player => {
+			document.getElementById(player.name).addEventListener("mouseup",()=>{
+			let destination = player;
+			popUpClose();
+			popUp("Giving Cards", "What are you giving?", giveCards);
+			giveCards.forEach(card => {
+				document.getElementById(card).addEventListener("mouseup",()=>{
+					popUpClose();
+					cardSwap(card, destination.name, currentPlayer.name)
+				});
+			});
+			});
+		});
+	};
+	const takeTrade = () =>{   //Determine what to take;
+		popUp("Taking Cards", "Which card do you wish to take?", takeCards);
+		takeCards.forEach((card)=>{
+			document.getElementById(card).addEventListener("mouseup",()=>{
+				popUpClose();
+				cardSwap(card,currentPlayer.name, takePlayers[(takeCards.indexOf(card))].name); 
+			});
+		});
+	};
+	const cardSwap = (cardName, destination, source) => {
+		let sourceHand = playerFindByName(source).hand; //Hand of where it is going FROM
+		let sourceIndex = cardFindIndex(sourceHand, cardName); //Point in hand it is going FROM.
+		let destinationHand = playerFindByName(destination).hand //Hand of Where it is going FROM
+		destinationHand.push(sourceHand[sourceIndex]);
+		sourceHand.splice(sourceIndex,1);
+		screenRefreshAction();
+	};
+
+	board.players.forEach((player) =>{ //Checking players in same location
+		if (player.location === location && player !== currentPlayer) localPlayers.push(player);
+	});
+	if (localPlayers.length === 0) return; //No one else to trade with.
+
+	currentPlayer.hand.forEach(card => {  //If and What can CurrentPlayer give?
+		if (currentPlayer.role === "Researcher" && card.type !== "event") giveCards.push(card.name)
+		if (card.name === location) giveCards.push(card.name);
+	});
+
+	localPlayers.forEach(localPlayer =>{   //what can local players Give?
+		localPlayer.hand.forEach(card => {
+			if (localPlayer.role === "Researcher" && card.type !== "event") {
+				takePlayers.push(localPlayer);
+				takeCards.push(card.name)
+			}
+			else if (card.name === location) {
+				takePlayers.push(localPlayer);
+				takeCards.push(card.name);
+			};
+		});
+	});
+	if (giveCards.length === 0 && takeCards.length === 0 ) return; //Nothing to give or take
+	if (giveCards.length > 0 && takeCards.length > 0) decideTrade() //Both give and Take
+	else if (takeCards.length > 0) takeTrade() //Take
+	else if (giveCards.length > 0) giveTrade(); //Give
+	
+}; //End of TradeActions;
+
+
 
 var buildAction = function(){
 	console.log("you hit the BUILD button yay");
@@ -783,31 +876,80 @@ var buildAction = function(){
 	//if yes build a research station, update screen and city,
 	// draw/actionupdate etc
 };
+const getCityIndex = (city=board.players[board.controls.sequence].location)=>{
+	let location = board.players[board.controls.sequence].location
+	board.tableCity = city;
+	return board.cities.findIndex(findCity);
+};
 
 var treatAction = function(){
-	console.log("Treat Button Hit");
-	board.tableCity = board.players[board.controls.sequence].location;
+//Variables
+console.log("Treat button hit");
+	const role = board.players[board.controls.sequence].role
+	const status = board.cures;
+	board.tableCity = board.players[board.controls.sequence].location; 
 	var cityIndex = board.cities.findIndex(findCity);
-	var city = board.cities[cityIndex];
-	board.controls.treatLevel = 1; //***control treatlevels better
-	if (city.blue+city.red+city.black+city.yellow === 0){
-		return("City has no disease");
-	}
-	if (city.blue>0){
-		city.blue-= board.controls.treatLevel;
+	let diseaseCount = 0;
+	let treatLevel = 1;
+	let targetDisease = "none"
+	let diseaseList = [];
+console.log(board.cities[cityIndex].name + "is the location treats will happen")
+//Functions
+	let treatDisease = color =>{ //Determine which color 
+		diseaseList.push(color);
+		targetDisease = color;
+		if (color === "Red" && board.cures.redCureStatus === "Cured") treatLevel = 3;
+		if (color === "Blue" && board.cures.blueCureStatus === "Cured") treatLevel = 3;
+		if (color === "Black" && board.cures.blackCureStatus === "Cured") treatLevel = 3;
+		if (color === "Yellow" && board.cures.yellowCureStatus === "Cured") treatLevel = 3;
 	};
-	if (city.red>0){
-		city.red-= board.controls.treatLevel;
+	let multipleDiseases = () =>{ //Determine action if multiple colours.
+		let diseaseChoice = popUp("Multiple Diseases", "Select which disease to treat here<br><br>")
+		diseaseList.forEach(disease =>{ //Add Buttons
+			diseaseChoice += `<button class='control' id='${diseaseList.indexOf(disease)}'>${disease}</button><br>`	
+		});
+		document.getElementById("popUp").innerHTML = diseaseChoice;
+		diseaseList.forEach(disease =>{ //Add event listeners to set the disease
+			document.getElementById(diseaseList.indexOf(disease)).addEventListener("mouseup",()=>{
+				targetDisease = disease;
+				document.getElementById("popUp").style.display = "none";
+				console.log("Disease selected is : " + targetDisease);
+			});
+		});
 	};
-	if (city.yellow>0){
-		city.yellow-= board.controls.treatLevel;
+//Determine what disease to treat and what Treat Level they have.
+console.log(board.cities[cityIndex]);
+	if (board.cities[cityIndex].blue>0) {treatDisease("Blue")};
+	if (board.cities[cityIndex].yellow>0) {treatDisease("Yellow")};
+	if (board.cities[cityIndex].red>0) {treatDisease("Red")};
+	if (board.cities[cityIndex].black>0) {treatDisease("Black")};
+	if (diseaseList.length === 0 ) return "No disease here";           //No disease exists here - End;
+	if (diseaseList.length > 1) multipleDiseases(); //if more than one disease present figure out a choice...
+	if (role === "Medic") treatLevel = 3; //Medics ALWAYS treat at 3.
+
+//Treat Effects
+	if (board.cities[cityIndex].blue>0){
+		board.cities[cityIndex].blue-= treatLevel;
+		if (board.cities[cityIndex].blue < 0) board.cities[cityIndex].blue = 0;
 	};
-	if (city.black>0){
-		city.black-= board.controls.treatLevel;
+	if (board.cities[cityIndex].red>0){
+		board.cities[cityIndex].red-= treatLevel;
+		if (board.cities[cityIndex].red < 0) board.cities[cityIndex].red = 0;
 	};
-	checkInfections();
+	if (board.cities[cityIndex].yellow>0){
+		board.cities[cityIndex].yellow-= treatLevel;
+		if (board.cities[cityIndex].yellow < 0) board.cities[cityIndex].yellow = 0;
+	};
+	if (board.cities[cityIndex].black>0){
+		board.cities[cityIndex].black-= treatLevel;
+		if (board.cities[cityIndex].black < 0) board.cities[cityIndex].black = 0;
+	};
+	checkCubePools(); //Madness - CHECKS ALL CITIES.
+	checkEradication();
 	screenRefreshAction();
 };
+
+
 
 var moveAction = function(){
 	console.log("you hit the MOVE button yay");
@@ -834,13 +976,13 @@ var clickMap = function(mapX, mapY){
 				if (board.cities[i].linkedCities[j] === board.players[board.controls.sequence].location || board.controls.charterJet === true){
 					board.controls.charterJet = false;
 					return clickedCity;
-				}
+				};
 			};
 			console.log("Not a linked city!");
 			board.controls.actions++
 			clickedCity=board.players[board.controls.sequence].location;
 			return clickedCity;
-		}
+		};
 	};
 	console.log("No city found clicking here");
 	board.controls.actions++
@@ -856,20 +998,33 @@ var checkClickLocation = function (canGoTo){
 	screenRefresh();
 };
 
+let medicCheck = ()=>{
+	if (board.cures.eradArray.length === 0) return; //if nothing is eradicated dont bother.
+	let medic = board.players.find(player => player.role === "Medic");
+	if (medic.role == null) return;
+	let cityIndex = (getCityIndex(medic.location));
+console.log("There is a medic on the board, checking for eradications that effect the diseases in " + board.cities[cityIndex].name);
+	board.cures.eradArray.forEach(color =>{
+		if (color === "Red") board.cities[cityIndex].red = 0;
+		if (color === "Blue") board.cities[cityIndex].blue = 0;
+		if (color === "Black") board.cities[cityIndex].black = 0;
+		if (color === "Yellow") board.cities[cityIndex].yellow = 0;
+		checkCubePools();
+	});
+};
+
+
 let discardCards = player =>{
 	pauseControls()
 	let div = document.getElementById("popUp");
 	div.style.display = "block";
 	let discardButtons = "";
-
 	player.hand.forEach(card => {
 			let cardName = card.name;
 			discardButtons += "<button class='control' id='card" + player.hand.indexOf(card) + "'>"+cardName+"</button><br>";
 		});
-
 	var buttonHTML = ("<h1>Discard a card</h1><br><p>You have too many cards, select a card to discard:<br>"+discardButtons);
 	div.innerHTML = buttonHTML;
-
 	player.hand.forEach(card => {
 		board.tableCard = card;
 		let cardId = player.hand.indexOf(card);
@@ -885,11 +1040,9 @@ let discardCards = player =>{
 			board.pPile.push(discard);
 			screenRefresh();
 			checkHandLimit();
-			
 		});
 	});
 };
-
 const checkHandLimit = ()=>{
 	if (board.players[board.controls.sequence].hand.length > 7) { //check if over hand limit of ....3 right now.
 		discardCards(board.players[board.controls.sequence]);
@@ -899,14 +1052,31 @@ const checkHandLimit = ()=>{
 		screenRefresh();
 	};
 };
-
 const nextPlayer =()=>{
 	board.controls.sequence++ //Goto next player
-	board.controls.actions = 4;   //needs to be variable for Generalist
+	board.controls.actions = 4;
 	if (board.controls.sequence === board.players.length){
 		board.controls.sequence = 0;
 	};
+	if (board.players[board.controls.sequence].role === "Generalist") board.controls.actions++
 };
+const popUp = (heading="No heading", paragraph = "No paragraph text", buttons) =>{
+	pauseControls();
+	let div = document.getElementById("popUp");
+	let textHTML = ("<h1>" + heading +"</h1><br><p>"  + paragraph + "<br>");
+	buttons.forEach(button =>{
+		textHTML += `<button class='control' id='${button}'>${button}</button><br>`;
+	});
+	div.style.display = "block";
+	div.innerHTML = textHTML;
+	return;
+};
+
+const popUpClose = () =>{
+	let div = document.getElementById("popUp");
+	div.style.display = "none";
+	setupControls();
+}; 
 
 var endTurn = function(){ //what happens at the end of a turn
 	console.log("End of Turn!");
@@ -914,15 +1084,9 @@ var endTurn = function(){ //what happens at the end of a turn
 	checkHandLimit(); //checks handlimit and does infection and next player steps
     screenRefresh();
 }; //End of EndTurn
-
 var screenRefreshAction = function (){
 	actionUpdate();
-	statusBar();
-	buttonsUpdate(); 
-	cardsUpdate();
-	setupControls();
-	playerUpdate();
-	draw();
+	screenRefresh();
 }
 var screenRefresh = function(){
 	statusBar();
@@ -932,7 +1096,6 @@ var screenRefresh = function(){
 	playerUpdate();
 	draw();
 };
-
 //Game SETUP
 	cityBuild(); //build cities
 	deckBuild(); //make player and infection decks
@@ -946,6 +1109,14 @@ var screenRefresh = function(){
 	initialInfection(); //infect initial cities
 	screenRefresh();
 	console.log("Game Board setup is complete");
+
+
+//Known Issues
+//1. Outbreaks chaining badly
+//2. Other diseases not of city color not showing.
+//3. Cures slections are not filtering by Card Color.
+//To Test
+
 	
 //Stage 0 - Core code - DONE
 	//Setup Board objects, players, cities, cards
@@ -953,9 +1124,9 @@ var screenRefresh = function(){
 	//draw board
 	//one-off setup functions
 
-//stage 1 - Mainloop (make core gameplay loop) -  mOSTly DONE
+//stage 1 - Mainloop (make core gameplay loop) - ODNE
 	//chooseplayer Loop 1 
-	//****in Progress: choices :  c. cure 
+	//choices 
 	//deal player Cards
 	//infection stage
 	//choose next player
@@ -966,22 +1137,33 @@ var screenRefresh = function(){
 	//outbreak - DONE
 	//eventCard - all do one thing for now. DONE
 	//Hand Limit - Done
-	//gameOver -   NEXT
-	//WinConditions  - NEXT
-	//cured-eradicated effects
+	//gameOver -   Done
+	//WinConditions  - DONE
+	//cured-eradicated effects - DONE!
 
 //Stage 3 - Extras - 
-	//Class Effects
-	//All Event Card effects
+	//Role Effects for the four in the game.
+				//medic - DONE
+				//generalist. DONE
+				//scientist DONE
+				//researcher DONE
+	//SOME EVENT CARD EFFECTS - IN PROGRESS... plus make them properly.
+
+	
+	//MENU
 	//Choose players
 	//choose difficulty
 
 //Stage 4 - Prettify -
+	//follow infection on map
+	//zoom to player at start of turn.
+	//ferry links.
+
 	//Help text (instructions, tooltips)
 	//general prettying of things
 	//music
 	//sound
-	//refactor code
+	//refactor code a little
 	
 //Stage 5 - Go Public! -
 	//-Host it up somewhere
